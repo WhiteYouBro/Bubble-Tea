@@ -1,0 +1,128 @@
+# Alert rules for Bubble Tea PostgreSQL monitoring
+groups:
+  - name: postgresql_alerts
+    interval: 30s
+    rules:
+      # Database connection alerts
+      - alert: PostgreSQLDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL instance is down"
+          description: "PostgreSQL instance {{ $labels.instance }} is down for more than 1 minute."
+
+      - alert: PostgreSQLTooManyConnections
+        expr: sum(pg_stat_activity_count) > 80
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Too many database connections"
+          description: "PostgreSQL instance {{ $labels.instance }} has {{ $value }} connections (threshold: 80)"
+
+      # Performance alerts
+      - alert: PostgreSQLHighCacheMissRatio
+        expr: rate(pg_stat_database_blks_read[5m]) / (rate(pg_stat_database_blks_read[5m]) + rate(pg_stat_database_blks_hit[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High cache miss ratio"
+          description: "Cache miss ratio is {{ $value | humanizePercentage }} (threshold: 10%)"
+
+      - alert: PostgreSQLSlowQueries
+        expr: rate(pg_stat_statements_mean_time_seconds[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow queries detected"
+          description: "Average query time is {{ $value }} seconds (threshold: 1s)"
+
+      # Transaction alerts
+      - alert: PostgreSQLHighRollbackRate
+        expr: rate(pg_stat_database_xact_rollback[5m]) / rate(pg_stat_database_xact_commit[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High transaction rollback rate"
+          description: "Rollback rate is {{ $value | humanizePercentage }} (threshold: 10%)"
+
+      # Disk space alerts
+      - alert: PostgreSQLDiskSpaceLow
+        expr: pg_database_size_bytes / (1024*1024*1024) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Database size is growing"
+          description: "Database {{ $labels.datname }} size is {{ $value }} GB"
+
+      # Replication alerts
+      - alert: PostgreSQLReplicationLag
+        expr: pg_replication_lag > 10
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL replication lag"
+          description: "Replication lag is {{ $value }} seconds (threshold: 10s)"
+
+      # Dead tuples alert
+      - alert: PostgreSQLDeadTuples
+        expr: pg_stat_user_tables_n_dead_tup > 10000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Too many dead tuples"
+          description: "Table {{ $labels.relname }} has {{ $value }} dead tuples. Consider running VACUUM."
+
+  - name: application_alerts
+    interval: 30s
+    rules:
+      # Flask application alerts
+      - alert: FlaskAppDown
+        expr: up{job="flask-app"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Flask application is down"
+          description: "Flask application has been down for more than 1 minute."
+
+      - alert: HighErrorRate
+        expr: rate(flask_http_request_total{status=~"5.."}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }}"
+
+  - name: exporter_alerts
+    interval: 30s
+    rules:
+      # Postgres Exporter down
+      - alert: PostgresExporterDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL Exporter is down"
+          description: "postgres_exporter has been down for more than 1 minute."
+
+      # Node Exporter down
+      - alert: NodeExporterDown
+        expr: up{job="node"} == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Node Exporter is down"
+          description: "node_exporter has been down for more than 1 minute."
+

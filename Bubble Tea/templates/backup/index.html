@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}Менеджер бэкапов — Панель управления{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="display-4">
+                <i class="bi bi-database-fill-gear"></i> Менеджер бэкапов
+            </h1>
+            <p class="lead">Управление резервными копиями и восстановление базы данных</p>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-archive"></i> Всего бэкапов</h5>
+                    <h2 class="display-4">{{ stats.total_backups }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-file-earmark-text"></i> Логические</h5>
+                    <h2 class="display-4">{{ stats.logical_count }}</h2>
+                    <small>{{ stats.total_logical_size }}</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-archive-fill"></i> Физические</h5>
+                    <h2 class="display-4">{{ stats.physical_count }}</h2>
+                    <small>{{ stats.total_physical_size }}</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-clock-history"></i> Последний бэкап</h5>
+                    {% if stats.last_backup %}
+                    <p class="mb-0"><strong>{{ stats.last_backup.modified }}</strong></p>
+                    <small>{{ stats.last_backup.filename }}</small>
+                    {% else %}
+                    <p class="text-muted">Бэкапов ещё нет</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5><i class="bi bi-lightning-fill"></i> Быстрые действия</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <a href="{{ url_for('backup.create_backup') }}" class="btn btn-success btn-lg w-100">
+                                <i class="bi bi-plus-circle"></i> Создать бэкап
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <a href="{{ url_for('backup.restore_backup') }}" class="btn btn-warning btn-lg w-100">
+                                <i class="bi bi-arrow-counterclockwise"></i> Восстановить БД
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <a href="{{ url_for('backup.backup_list') }}" class="btn btn-primary btn-lg w-100">
+                                <i class="bi bi-list-ul"></i> Все бэкапы
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent logical backups -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5><i class="bi bi-file-earmark-text"></i> Логические бэкапы (pg_dump)</h5>
+                </div>
+                <div class="card-body">
+                    {% if logical_backups %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Файл</th>
+                                    <th>Размер</th>
+                                    <th>Дата</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for backup in logical_backups %}
+                                <tr>
+                                    <td><i class="bi bi-file-earmark-zip"></i> {{ backup.filename }}</td>
+                                    <td>{{ backup.size }}</td>
+                                    <td>{{ backup.modified }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <a href="{{ url_for('backup.backup_list', type='logical') }}"
+                        class="btn btn-sm btn-outline-success">
+                        Показать все →
+                    </a>
+                    {% else %}
+                    <p class="text-muted">Логических бэкапов нет</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent physical backups -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5><i class="bi bi-archive-fill"></i> Физические бэкапы (pg_basebackup)</h5>
+                </div>
+                <div class="card-body">
+                    {% if physical_backups %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Файл</th>
+                                    <th>Размер</th>
+                                    <th>Дата</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for backup in physical_backups %}
+                                <tr>
+                                    <td><i class="bi bi-file-earmark-zip-fill"></i> {{ backup.filename }}</td>
+                                    <td>{{ backup.size }}</td>
+                                    <td>{{ backup.modified }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <a href="{{ url_for('backup.backup_list', type='physical') }}" class="btn btn-sm btn-outline-info">
+                        Показать все →
+                    </a>
+                    {% else %}
+                    <p class="text-muted">Физических бэкапов нет</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backup Strategy Info -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5><i class="bi bi-info-circle"></i> Стратегия резервного копирования</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6><i class="bi bi-calendar-day"></i> Ежедневно (2:00)</h6>
+                            <p>Логический бэкап (pg_dump)</p>
+                            <ul>
+                                <li>Формат: Custom (.backup)</li>
+                                <li>Хранение: 30 дней</li>
+                                <li>RPO: 24 часа</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6><i class="bi bi-calendar-week"></i> Еженедельно (Вс, 3:00)</h6>
+                            <p>Физический бэкап (pg_basebackup)</p>
+                            <ul>
+                                <li>Формат: TAR сжатый (.tar.gz)</li>
+                                <li>Хранение: 4 недели</li>
+                                <li>RPO: 1 неделя</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6><i class="bi bi-arrow-repeat"></i> Непрерывно</h6>
+                            <p>Архивирование WAL</p>
+                            <ul>
+                                <li>Автоматическое архивирование</li>
+                                <li>Хранение: 7 дней</li>
+                                <li>RPO: < 1 минуты (PITR)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="alert alert-info mt-3">
+                        <i class="bi bi-lightbulb"></i>
+                        <strong>Целевые показатели восстановления:</strong>
+                        RPO (целевая точка восстановления) < 1 час | RTO (целевое время восстановления) < 2 часов </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <style>
+        .card {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: none;
+            margin-bottom: 1rem;
+        }
+
+        .card-header {
+            font-weight: 600;
+        }
+
+        .btn-lg {
+            padding: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .display-4 {
+            font-weight: 600;
+        }
+    </style>
+    {% endblock %}

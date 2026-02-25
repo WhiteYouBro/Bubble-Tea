@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Создание бэкапа{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('backup.index') }}">Менеджер бэкапов</a></li>
+            <li class="breadcrumb-item active">Создание бэкапа</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4><i class="bi bi-plus-circle"></i> Создать новый бэкап</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('backup.create_backup') }}">
+                        <div class="mb-4">
+                            <label class="form-label"><strong>Выберите тип бэкапа:</strong></label>
+
+                            <div class="card mb-3 backup-option" onclick="selectBackupType('logical')">
+                                <div class="card-body">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="backup_type" id="logical"
+                                            value="logical" checked>
+                                        <label class="form-check-label" for="logical">
+                                            <h5><i class="bi bi-file-earmark-text text-success"></i> Логический бэкап
+                                                (pg_dump)</h5>
+                                        </label>
+                                    </div>
+                                    <ul class="mt-2">
+                                        <li><strong>Формат:</strong> Custom (.backup) + Plain SQL (.sql)</li>
+                                        <li><strong>Время выполнения:</strong> ~5-15 минут</li>
+                                        <li><strong>Размер:</strong> ~10-50 МБ (сжатый)</li>
+                                        <li><strong>Преимущества:</strong> Выборочное восстановление, совместимость
+                                            версий</li>
+                                        <li><strong>Применение:</strong> Ежедневные бэкапы, миграция между версиями</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="card backup-option" onclick="selectBackupType('physical')">
+                                <div class="card-body">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="backup_type" id="physical"
+                                            value="physical">
+                                        <label class="form-check-label" for="physical">
+                                            <h5><i class="bi bi-archive-fill text-info"></i> Физический бэкап
+                                                (pg_basebackup)</h5>
+                                        </label>
+                                    </div>
+                                    <ul class="mt-2">
+                                        <li><strong>Формат:</strong> TAR сжатый (.tar.gz)</li>
+                                        <li><strong>Время выполнения:</strong> ~10-30 минут</li>
+                                        <li><strong>Размер:</strong> ~100-500 МБ</li>
+                                        <li><strong>Преимущества:</strong> Быстрое восстановление, поддержка PITR</li>
+                                        <li><strong>Применение:</strong> Еженедельные полные бэкапы, репликация</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <strong>Внимание:</strong>
+                            Создание бэкапа может занять несколько минут.
+                            Не закрывайте браузер во время операции.
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-play-circle"></i> Создать бэкап
+                            </button>
+                            <a href="{{ url_for('backup.index') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Отмена
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Information -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5><i class="bi bi-info-circle"></i> Информация о бэкапах</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Автоматические бэкапы</h6>
+                    <p>Система автоматически создаёт бэкапы по расписанию:</p>
+                    <ul>
+                        <li><strong>Логический:</strong> Ежедневно в 2:00 через Планировщик задач</li>
+                        <li><strong>Физический:</strong> Еженедельно (воскресенье) в 3:00</li>
+                        <li><strong>Архивирование WAL:</strong> Непрерывно</li>
+                    </ul>
+
+                    <h6 class="mt-3">Где хранятся бэкапы?</h6>
+                    <ul>
+                        <li><strong>Логические:</strong> <code>backups/logical/</code></li>
+                        <li><strong>Физические:</strong> <code>backups/physical/</code></li>
+                        <li><strong>WAL:</strong> <code>backups/wal_archive/</code></li>
+                    </ul>
+
+                    <h6 class="mt-3">Политика хранения</h6>
+                    <ul>
+                        <li><strong>Логические бэкапы:</strong> 30 дней</li>
+                        <li><strong>Физические бэкапы:</strong> 4 недели (4 бэкапа)</li>
+                        <li><strong>WAL файлы:</strong> 7 дней</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .backup-option {
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .backup-option:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .backup-option.selected {
+        border: 2px solid #28a745;
+    }
+</style>
+
+<script>
+    function selectBackupType(type) {
+        document.getElementById(type).checked = true;
+
+        // Remove selected class from all
+        document.querySelectorAll('.backup-option').forEach(el => {
+            el.classList.remove('selected');
+        });
+
+        // Add selected class to clicked
+        event.currentTarget.classList.add('selected');
+    }
+
+    // Select first option by default
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelector('.backup-option').classList.add('selected');
+    });
+</script>
+{% endblock %}

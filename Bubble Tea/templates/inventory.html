@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Склад - Bubble Tea "BibaBobaBebe"{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="bi bi-box-seam"></i> Управление складом
+            </h1>
+            <a href="{{ url_for('check_inventory_availability') }}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-repeat"></i> Обновить наличие
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if low_stock %}
+<div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle"></i>
+    <strong>Внимание!</strong> {{ low_stock|length }} ингредиент(ов) требуют пополнения.
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-list"></i> Ингредиенты ({{ ingredients|length }})
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if ingredients %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>№</th>
+                                <th>Наименование</th>
+                                <th>Ед. изм.</th>
+                                <th>В наличии</th>
+                                <th>Мин. уровень</th>
+                                <th>Цена за ед.</th>
+                                <th>Статус</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ingredient in ingredients %}
+                            <tr class="{{ 'table-warning' if ingredient.needs_restock else '' }}">
+                                <td><strong>#{{ ingredient.ingredient_id }}</strong></td>
+                                <td><strong>{{ ingredient.ingredient_name }}</strong></td>
+                                <td>{{ ingredient.unit }}</td>
+                                <td>
+                                    <strong class="{{ 'text-danger' if ingredient.needs_restock else 'text-success' }}">
+                                        {{ ingredient.stock_quantity }}
+                                    </strong>
+                                </td>
+                                <td>{{ ingredient.minimum_quantity }}</td>
+                                <td>{{ ingredient.cost_per_unit | currency }}</td>
+                                <td>
+                                    {% if ingredient.needs_restock %}
+                                    <span class="badge bg-danger">Требуется пополнение</span>
+                                    {% else %}
+                                    <span class="badge bg-success">В наличии</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal"
+                                        data-bs-target="#restockModal{{ ingredient.ingredient_id }}">
+                                        <i class="bi bi-plus-circle"></i> Пополнить
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- Restock Modal -->
+                            <div class="modal fade" id="restockModal{{ ingredient.ingredient_id }}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Пополнение: {{ ingredient.ingredient_name }}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <form method="POST"
+                                            action="{{ url_for('restock_ingredient', ingredient_id=ingredient.ingredient_id) }}">
+                                            <div class="modal-body">
+                                                <p>Текущий остаток: <strong>{{ ingredient.stock_quantity }} {{
+                                                        ingredient.unit }}</strong></p>
+                                                <div class="mb-3">
+                                                    <label for="quantity{{ ingredient.ingredient_id }}"
+                                                        class="form-label">Количество для пополнения</label>
+                                                    <input type="number" class="form-control"
+                                                        id="quantity{{ ingredient.ingredient_id }}" name="quantity"
+                                                        min="1" step="0.01" required>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Отмена</button>
+                                                <button type="submit" class="btn btn-primary">Подтвердить
+                                                    пополнение</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Summary Statistics -->
+                <div class="row mt-4">
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h3 class="text-primary">{{ ingredients|length }}</h3>
+                                <p class="mb-0">Всего позиций</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h3 class="text-success">{{ ingredients|length - low_stock|length }}</h3>
+                                <p class="mb-0">В наличии</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h3 class="text-danger">{{ low_stock|length }}</h3>
+                                <p class="mb-0">Мало на складе</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h3 class="text-info">
+                                    {{ ingredients|sum(attribute='cost_per_unit') | currency }}
+                                </h3>
+                                <p class="mb-0">Стоимость склада</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% else %}
+                <div class="alert alert-info text-center" role="alert">
+                    <i class="bi bi-info-circle"></i> Ингредиенты не найдены
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

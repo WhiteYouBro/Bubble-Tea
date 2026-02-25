@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}Новый заказ - Bubble Tea "BibaBobaBebe"{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 offset-md-1">
+        <h1 class="mb-4">
+            <i class="bi bi-cart-plus"></i> Новый заказ
+        </h1>
+
+        <form method="POST" id="orderForm">
+            <!-- Customer Information -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-person"></i> Информация о клиенте {% if
+                        current_user.is_authenticated %}<span class="badge bg-light text-dark">Необязательно</span>{%
+                        endif %}</h5>
+                </div>
+                <div class="card-body">
+                    {% if current_user.is_authenticated %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> <strong>Здравствуйте, {{ current_user.full_name or
+                            current_user.username }}!</strong>
+                        Ваш заказ будет автоматически привязан к вашему аккаунту.
+                        {% if not current_user.phone %}
+                        <br><small>Добавьте номер телефона в <a href="{{ url_for('profile_settings') }}">настройках</a>
+                            для начисления бонусов.</small>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="customer_name" class="form-label">Имя клиента {% if not
+                                    current_user.is_authenticated %}<span class="text-danger">*</span>{% endif
+                                    %}</label>
+                                <input type="text" class="form-control" id="customer_name" name="customer_name"
+                                    placeholder="Иван Иванов"
+                                    value="{{ current_user.full_name if current_user.is_authenticated else '' }}" {% if
+                                    not current_user.is_authenticated %}required{% endif %}>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="customer_phone" class="form-label">Телефон</label>
+                                <input type="tel" class="form-control" id="customer_phone" name="customer_phone"
+                                    placeholder="+77001234567"
+                                    value="{{ current_user.phone if current_user.is_authenticated else '' }}">
+                                <small class="form-text text-muted">Для начисления бонусов и отслеживания заказа</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Selection -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-cup-straw"></i> Выбор продуктов</h5>
+                </div>
+                <div class="card-body">
+                    <div id="orderItems">
+                        <div class="row order-item mb-3 align-items-end">
+                            <div class="col-md-6">
+                                <label class="form-label">Продукт</label>
+                                <select class="form-select product-select" name="product_id" required>
+                                    <option value="">Выберите продукт...</option>
+                                    {% for product in products %}
+                                    <option value="{{ product.product_id }}" data-price="{{ product.price }}">
+                                        {{ product.product_name }} - {{ product.price | currency }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Количество</label>
+                                <input type="number" class="form-control quantity-input" name="quantity" value="1"
+                                    min="1" required>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-danger btn-remove w-100" style="display:none;">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-success" id="addItem">
+                        <i class="bi bi-plus-circle"></i> Добавить продукт
+                    </button>
+                </div>
+            </div>
+
+            <!-- Order Details -->
+            <div class="card mb-4">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Детали заказа</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="payment_method" class="form-label">Способ оплаты *</label>
+                                <select class="form-select" id="payment_method" name="payment_method" required>
+                                    <option value="cash">Наличные</option>
+                                    <option value="card">Карта</option>
+                                    <option value="online">Онлайн</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">Примечания</label>
+                                <textarea class="form-control" id="notes" name="notes" rows="3"
+                                    placeholder="Особые пожелания..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total -->
+            <div class="card mb-4 border-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4>Итого:</h4>
+                        <h3 class="text-primary" id="totalAmount">0 ₸</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-4">
+                <a href="{{ url_for('menu') }}" class="btn btn-secondary btn-lg">
+                    <i class="bi bi-x-circle"></i> Отмена
+                </a>
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-check-circle"></i> Оформить заказ
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const orderItemsContainer = document.getElementById('orderItems');
+        const addItemBtn = document.getElementById('addItem');
+        const totalAmountEl = document.getElementById('totalAmount');
+
+        function getOrderItemTemplate() {
+            const template = orderItemsContainer.querySelector('.order-item').cloneNode(true);
+            template.querySelector('.product-select').value = '';
+            template.querySelector('.quantity-input').value = '1';
+            template.querySelector('.btn-remove').style.display = 'block';
+            return template;
+        }
+
+        addItemBtn.addEventListener('click', function () {
+            const newItem = getOrderItemTemplate();
+            orderItemsContainer.appendChild(newItem);
+            updateTotal();
+            updateRemoveButtons();
+        });
+
+        orderItemsContainer.addEventListener('click', function (e) {
+            if (e.target.closest('.btn-remove')) {
+                e.target.closest('.order-item').remove();
+                updateTotal();
+                updateRemoveButtons();
+            }
+        });
+
+        orderItemsContainer.addEventListener('change', updateTotal);
+
+        function updateTotal() {
+            let total = 0;
+            orderItemsContainer.querySelectorAll('.order-item').forEach(item => {
+                const select = item.querySelector('.product-select');
+                const quantity = parseFloat(item.querySelector('.quantity-input').value) || 0;
+                const price = parseFloat(select.options[select.selectedIndex]?.dataset.price) || 0;
+                total += price * quantity;
+            });
+            totalAmountEl.textContent = Math.round(total).toLocaleString('ru-RU') + ' ₸';
+        }
+
+        // Initialize total on page load
+        updateTotal();
+
+        function updateRemoveButtons() {
+            const items = orderItemsContainer.querySelectorAll('.order-item');
+            items.forEach((item, index) => {
+                const removeBtn = item.querySelector('.btn-remove');
+                removeBtn.style.display = items.length > 1 ? 'block' : 'none';
+            });
+        }
+
+        // Check if product_id is in URL and auto-select it
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('product_id');
+        if (productId) {
+            const firstSelect = orderItemsContainer.querySelector('.product-select');
+            if (firstSelect) {
+                firstSelect.value = productId;
+                updateTotal();
+            }
+        }
+
+        updateTotal();
+    });
+</script>
+{% endblock %}

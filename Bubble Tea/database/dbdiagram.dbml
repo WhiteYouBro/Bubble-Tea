@@ -1,0 +1,118 @@
+// База данных для кофейни Bubble Tea "BibaBobaBebe"
+// Скопируйте этот код на https://dbdiagram.io/
+
+Table positions {
+  position_id integer [primary key, increment]
+  position_name varchar(50) [not null, unique]
+  base_salary decimal(10,2) [not null]
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  
+  Note: 'Должности сотрудников кофейни'
+}
+
+Table employees {
+  employee_id integer [primary key, increment]
+  first_name varchar(50) [not null]
+  last_name varchar(50) [not null]
+  phone varchar(20) [unique]
+  email varchar(100) [unique]
+  position_id integer [not null, ref: > positions.position_id]
+  hire_date date [not null, default: `CURRENT_DATE`]
+  salary decimal(10,2) [not null]
+  is_active boolean [default: true]
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  
+  Note: 'Информация о сотрудниках'
+}
+
+Table customers {
+  customer_id integer [primary key, increment]
+  first_name varchar(50) [not null]
+  last_name varchar(50) [not null]
+  phone varchar(20) [unique, not null]
+  email varchar(100) [unique]
+  loyalty_points integer [default: 0]
+  registration_date date [not null, default: `CURRENT_DATE`]
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  
+  Note: 'Клиенты с программой лояльности'
+}
+
+Table categories {
+  category_id integer [primary key, increment]
+  category_name varchar(50) [not null, unique]
+  description text
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  
+  Note: 'Категории продуктов (напитки, десерты, и т.д.)'
+}
+
+Table products {
+  product_id integer [primary key, increment]
+  product_name varchar(100) [not null]
+  category_id integer [not null, ref: > categories.category_id]
+  price decimal(10,2) [not null]
+  description text
+  is_available boolean [default: true]
+  preparation_time integer
+  image_url varchar(255)
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  
+  Note: 'Продукты и напитки кофейни'
+}
+
+Table ingredients {
+  ingredient_id integer [primary key, increment]
+  ingredient_name varchar(100) [not null, unique]
+  unit varchar(20) [not null]
+  stock_quantity decimal(10,2) [not null]
+  min_quantity decimal(10,2) [not null]
+  cost_per_unit decimal(10,2) [not null]
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  
+  Note: 'Ингредиенты для приготовления (мл, г, шт)'
+}
+
+Table product_ingredients {
+  product_ingredient_id integer [primary key, increment]
+  product_id integer [not null, ref: > products.product_id]
+  ingredient_id integer [not null, ref: > ingredients.ingredient_id]
+  quantity decimal(10,2) [not null]
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  
+  Indexes {
+    (product_id, ingredient_id) [unique]
+  }
+  
+  Note: 'Связь продуктов и ингредиентов (состав)'
+}
+
+Table orders {
+  order_id integer [primary key, increment]
+  customer_id integer [ref: > customers.customer_id]
+  employee_id integer [not null, ref: > employees.employee_id]
+  order_date timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  total_amount decimal(10,2) [not null]
+  status varchar(20) [not null, default: 'pending']
+  payment_method varchar(20) [not null]
+  notes text
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  
+  Note: 'Заказы клиентов. Status: pending, preparing, ready, completed, cancelled'
+}
+
+Table order_items {
+  order_item_id integer [primary key, increment]
+  order_id integer [not null, ref: > orders.order_id]
+  product_id integer [not null, ref: > products.product_id]
+  quantity integer [not null]
+  unit_price decimal(10,2) [not null]
+  subtotal decimal(10,2) [not null]
+  customization text
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  
+  Note: 'Позиции заказа (детали)'
+}
+
+// Все связи (Relationships) уже определены в таблицах через ref:
+// Например: position_id integer [not null, ref: > positions.position_id]

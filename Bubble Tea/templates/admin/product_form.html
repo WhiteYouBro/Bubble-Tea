@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}{% if product %}Редактировать{% else %}Добавить{% endif %} продукт — Админ{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1>
+            <i class="bi bi-{% if product %}pencil{% else %}plus-circle{% endif %}"></i>
+            {% if product %}Редактировать{% else %}Добавить{% endif %} продукт
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Информация о продукте</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="product_name" class="form-label">
+                                <i class="bi bi-cup-straw"></i> Название продукта *
+                            </label>
+                            <input type="text" class="form-control" id="product_name" name="product_name"
+                                value="{{ product.product_name if product else '' }}" required>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="category_id" class="form-label">
+                                <i class="bi bi-tags"></i> Категория *
+                            </label>
+                            <select class="form-select" id="category_id" name="category_id" required>
+                                <option value="">Выберите...</option>
+                                {% for category in categories %}
+                                <option value="{{ category.category_id }}" {% if product and
+                                    product.category_id==category.category_id %}selected{% endif %}>
+                                    {{ category.category_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="price" class="form-label">
+                                <i class="bi bi-currency-dollar"></i> Цена (₸) *
+                            </label>
+                            <input type="number" class="form-control" id="price" name="price" step="0.01" min="0"
+                                value="{{ product.price if product else '' }}" required>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="preparation_time" class="form-label">
+                                <i class="bi bi-clock"></i> Время приготовления (мин)
+                            </label>
+                            <input type="number" class="form-control" id="preparation_time" name="preparation_time"
+                                min="1" value="{{ product.preparation_time if product else '' }}">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">
+                            <i class="bi bi-card-text"></i> Описание
+                        </label>
+                        <textarea class="form-control" id="description" name="description"
+                            rows="3">{{ product.description if product else '' }}</textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="image" class="form-label">
+                            <i class="bi bi-image"></i> Изображение продукта
+                        </label>
+                        {% if product and product.image_url %}
+                        <div class="mb-2">
+                            <img src="{{ product.image_url }}" alt="{{ product.product_name }}"
+                                style="max-width: 200px; border-radius: 8px;" class="shadow-sm">
+                            <p class="text-muted mt-2"><small>Загрузите новое изображение для замены</small></p>
+                        </div>
+                        {% endif %}
+                        <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                        <small class="text-muted">Форматы: PNG, JPG, JPEG, GIF, WEBP (макс. 5 МБ)</small>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="is_available" name="is_available" {% if not
+                            product or product.is_available %}checked{% endif %}>
+                        <label class="form-check-label" for="is_available">
+                            <i class="bi bi-check-circle"></i> Доступен для продажи
+                        </label>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('admin_products') }}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Отмена
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> {% if product %}Обновить{% else %}Создать{% endif %}
+                            продукт
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Вход — BibaBobaBebe{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login-enhanced.css') }}">
+
+<div class="login-container">
+    <div class="w-100" style="max-width:420px; margin:0 auto;">
+
+        <!-- Logo / brand mark -->
+        <div class="text-center mb-4">
+            <i class="bi bi-cup-hot-fill" style="font-size:2rem; color:var(--caramel);"></i>
+            <div
+                style="font-size:0.72rem; text-transform:uppercase; letter-spacing:0.12em; color:#aaa; margin-top:0.3rem;">
+                BibaBobaBebe
+            </div>
+        </div>
+
+        <div class="card login-card">
+            <div class="card-header">
+                <h3>Вход</h3>
+            </div>
+
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('login') }}">
+
+                    <div class="mb-4">
+                        <label for="username" class="form-label">Имя пользователя</label>
+                        <input type="text" class="form-control" id="username" name="username" placeholder="ваш_логин"
+                            required autofocus autocomplete="username">
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="password" class="form-label">Пароль</label>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="••••••••"
+                            required autocomplete="current-password">
+                    </div>
+
+                    <div class="d-grid mt-3">
+                        <button type="submit" class="btn btn-primary">
+                            Войти
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+
+            <div class="card-footer">
+                Нет аккаунта? <a href="{{ url_for('register') }}">Регистрация →</a>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

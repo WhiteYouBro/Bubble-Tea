@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Поиск - Bubble Tea "BibaBobaBebe"{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="bi bi-search"></i> Полнотекстовый поиск
+        </h1>
+        <p class="text-muted mb-4">
+            Найдите любую информацию по продуктам, клиентам, заказам и сотрудникам.
+        </p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-body">
+                <form id="searchForm" onsubmit="performSearch(event)">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="searchType" class="form-label">Искать в</label>
+                            <select class="form-select" id="searchType">
+                                <option value="products">Продуктах</option>
+                                <option value="customers">Клиентах</option>
+                                <option value="orders">Заказах</option>
+                                <option value="employees">Сотрудниках</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="searchQuery" class="form-label">Поисковый запрос</label>
+                            <input type="text" class="form-control" id="searchQuery"
+                                placeholder="Введите поисковый запрос..." required>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search"></i> Найти
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Indicator -->
+<div id="loadingIndicator" style="display:none;" class="text-center py-4">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Загрузка...</span>
+    </div>
+    <p class="text-muted mt-2">Поиск...</p>
+</div>
+
+<!-- Search Results -->
+<div id="searchResults" style="display:none;">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white d-flex justify-content-between">
+            <h5 class="mb-0"><i class="bi bi-list"></i> Результаты поиска</h5>
+            <span class="badge bg-light text-dark" id="resultCount"></span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light" id="resultHeaders"></thead>
+                    <tbody id="resultBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- No Results -->
+<div id="noResults" style="display:none;" class="alert alert-info text-center">
+    <i class="bi bi-info-circle"></i> По вашему запросу ничего не найдено.
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const HEADERS = {
+        products: ['Продукт', 'Категория', 'Цена', 'Описание', 'Релевантность'],
+        customers: ['Имя', 'Телефон', 'Email', 'Баллы', 'Релевантность'],
+        orders: ['Заказ №', 'Дата', 'Клиент', 'Сотрудник', 'Сумма', 'Статус', 'Оплата', 'Релевантность'],
+        employees: ['Имя', 'Должность', 'Телефон', 'Email', 'Зарплата', 'Релевантность']
+    };
+
+    function performSearch(e) {
+        e.preventDefault();
+        const type = document.getElementById('searchType').value;
+        const query = document.getElementById('searchQuery').value;
+
+        document.getElementById('loadingIndicator').style.display = '';
+        document.getElementById('searchResults').style.display = 'none';
+        document.getElementById('noResults').style.display = 'none';
+
+        fetch(`/api/search/${type}?q=${encodeURIComponent(query)}`)
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('loadingIndicator').style.display = 'none';
+
+                if (!data.success || data.count === 0) {
+                    document.getElementById('noResults').style.display = '';
+                    return;
+                }
+
+                document.getElementById('resultCount').textContent = `Найдено: ${data.count}`;
+
+                // Build headers
+                const headers = HEADERS[type];
+                let headerHtml = '<tr>';
+                headers.forEach(h => headerHtml += `<th>${h}</th>`);
+                headerHtml += '</tr>';
+                document.getElementById('resultHeaders').innerHTML = headerHtml;
+
+                // Build rows
+                let bodyHtml = '';
+                data.results.forEach(item => {
+                    bodyHtml += '<tr>';
+                    if (type === 'products') {
+                        bodyHtml += `<td><strong>${item.product_name}</strong></td>`;
+                        bodyHtml += `<td><span class="badge bg-info">${item.category_name}</span></td>`;
+                        bodyHtml += `<td>${item.price} ₸</td>`;
+                        bodyHtml += `<td>${(item.description || '').substring(0, 50)}...</td>`;
+                        bodyHtml += `<td>${item.relevance.toFixed(2)}</td>`;
+                    } else if (type === 'customers') {
+                        bodyHtml += `<td><strong>${item.full_name}</strong></td>`;
+                        bodyHtml += `<td>${item.phone || '-'}</td>`;
+                        bodyHtml += `<td>${item.email || '-'}</td>`;
+                        bodyHtml += `<td>${item.loyalty_points}</td>`;
+                        bodyHtml += `<td>${item.relevance.toFixed(2)}</td>`;
+                    } else if (type === 'orders') {
+                        bodyHtml += `<td><strong>#${item.order_id}</strong></td>`;
+                        bodyHtml += `<td>${item.order_date || '-'}</td>`;
+                        bodyHtml += `<td>${item.customer_name || '-'}</td>`;
+                        bodyHtml += `<td>${item.employee_name || '-'}</td>`;
+                        bodyHtml += `<td>${item.total_amount} ₸</td>`;
+                        bodyHtml += `<td>${item.status}</td>`;
+                        bodyHtml += `<td>${item.payment_method}</td>`;
+                        bodyHtml += `<td>${item.relevance.toFixed(2)}</td>`;
+                    } else if (type === 'employees') {
+                        bodyHtml += `<td><strong>${item.full_name}</strong></td>`;
+                        bodyHtml += `<td>${item.position_name}</td>`;
+                        bodyHtml += `<td>${item.phone || '-'}</td>`;
+                        bodyHtml += `<td>${item.email || '-'}</td>`;
+                        bodyHtml += `<td>${item.salary} ₸</td>`;
+                        bodyHtml += `<td>${item.relevance.toFixed(2)}</td>`;
+                    }
+                    bodyHtml += '</tr>';
+                });
+                document.getElementById('resultBody').innerHTML = bodyHtml;
+                document.getElementById('searchResults').style.display = '';
+            })
+            .catch(err => {
+                document.getElementById('loadingIndicator').style.display = 'none';
+                document.getElementById('noResults').style.display = '';
+                console.error('Ошибка поиска:', err);
+            });
+    }
+</script>
+{% endblock %}

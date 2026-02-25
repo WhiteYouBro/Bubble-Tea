@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+
+{% block title %}Системные логи — Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="mb-1"><i class="bi bi-journal-text text-primary"></i> Системные логи</h1>
+        <p class="text-muted mb-0">Все события кофейни в реальном времени</p>
+    </div>
+    <div class="d-flex gap-2">
+        <span class="badge bg-secondary fs-6" title="Всего записей">{{ stats.total }} записей</span>
+        <span class="badge bg-danger fs-6" title="Непрочитанных">{{ stats.unread }} новых</span>
+        <a href="{{ url_for('admin_logs') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-clockwise"></i> Обновить
+        </a>
+    </div>
+</div>
+
+<!-- Статистика по уровням -->
+<div class="row mb-4 g-2">
+    <div class="col-6 col-md-2">
+        <a href="{{ url_for('admin_logs', level='info') }}" class="text-decoration-none">
+            <div
+                class="card border-info h-100 text-center py-2 {% if current_level == 'info' %}bg-info text-white{% endif %}">
+                <div class="fs-4 text-info {% if current_level == 'info' %}text-white{% endif %}">{{ stats.by_level.info
+                    }}</div>
+                <div class="small {% if current_level != 'info' %}text-info{% endif %}"><i
+                        class="bi bi-info-circle-fill"></i> Info</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-md-2">
+        <a href="{{ url_for('admin_logs', level='success') }}" class="text-decoration-none">
+            <div
+                class="card border-success h-100 text-center py-2 {% if current_level == 'success' %}bg-success text-white{% endif %}">
+                <div class="fs-4 text-success {% if current_level == 'success' %}text-white{% endif %}">{{
+                    stats.by_level.success }}</div>
+                <div class="small {% if current_level != 'success' %}text-success{% endif %}"><i
+                        class="bi bi-check-circle-fill"></i> Success</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-md-2">
+        <a href="{{ url_for('admin_logs', level='warning') }}" class="text-decoration-none">
+            <div
+                class="card border-warning h-100 text-center py-2 {% if current_level == 'warning' %}bg-warning{% endif %}">
+                <div class="fs-4 text-warning {% if current_level == 'warning' %}text-dark{% endif %}">{{
+                    stats.by_level.warning }}</div>
+                <div class="small {% if current_level != 'warning' %}text-warning{% endif %}"><i
+                        class="bi bi-exclamation-triangle-fill"></i> Warning</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-md-2">
+        <a href="{{ url_for('admin_logs', level='error') }}" class="text-decoration-none">
+            <div
+                class="card border-danger h-100 text-center py-2 {% if current_level == 'error' %}bg-danger text-white{% endif %}">
+                <div class="fs-4 text-danger {% if current_level == 'error' %}text-white{% endif %}">{{
+                    stats.by_level.error }}</div>
+                <div class="small {% if current_level != 'error' %}text-danger{% endif %}"><i
+                        class="bi bi-x-circle-fill"></i> Error</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-md-2">
+        <a href="{{ url_for('admin_logs', level='critical') }}" class="text-decoration-none">
+            <div
+                class="card border-danger h-100 text-center py-2 {% if current_level == 'critical' %}bg-dark text-white{% endif %}">
+                <div class="fs-4 text-danger {% if current_level == 'critical' %}text-white{% endif %}">{{
+                    stats.by_level.critical }}</div>
+                <div class="small {% if current_level != 'critical' %}text-danger{% endif %}"><i class="bi bi-fire"></i>
+                    Critical</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="card border-secondary h-100 text-center py-2 bg-light">
+            <div class="fs-4 text-primary">{{ stats.today }}</div>
+            <div class="small text-secondary"><i class="bi bi-calendar-day"></i> Сегодня</div>
+        </div>
+    </div>
+</div>
+
+<!-- Статистика по категориям -->
+<div class="row mb-3 g-2">
+    {% set categories = [
+    ('order', '🛒', 'Заказы', 'primary'),
+    ('inventory', '📦', 'Склад', 'warning'),
+    ('backup', '💾', 'Бэкапы', 'danger'),
+    ('auth', '🔑', 'Входы', 'info'),
+    ('product', '🍹', 'Продукты', 'success'),
+    ('system', '⚙️', 'Система', 'secondary'),
+    ] %}
+    {% for cat_id, emoji, label, color in categories %}
+    <div class="col-4 col-md-2">
+        <a href="{{ url_for('admin_logs', category=cat_id) }}" class="text-decoration-none">
+            <div
+                class="card text-center py-2 border-{{ color }} {% if current_category == cat_id %}bg-{{ color }} text-white{% endif %}">
+                <div class="fs-5">{{ emoji }}</div>
+                <div class="fw-bold {% if current_category != cat_id %}text-{{ color }}{% endif %}">{{
+                    stats.by_category[cat_id] }}</div>
+                <div class="small">{{ label }}</div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Поиск и фильтры -->
+<div class="card shadow-sm mb-3">
+    <div class="card-body py-2">
+        <form method="GET" action="{{ url_for('admin_logs') }}" class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" name="search" class="form-control"
+                        placeholder="Поиск по заголовку или сообщению..." value="{{ search }}">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <select name="category" class="form-select form-select-sm">
+                    <option value="">Все категории</option>
+                    {% for cat_id, emoji, label, color in categories %}
+                    <option value="{{ cat_id }}" {% if current_category==cat_id %}selected{% endif %}>{{ emoji }} {{
+                        label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="level" class="form-select form-select-sm">
+                    <option value="">Все уровни</option>
+                    <option value="info" {% if current_level=='info' %}selected{% endif %}>ℹ️ Info</option>
+                    <option value="success" {% if current_level=='success' %}selected{% endif %}>✅ Success</option>
+                    <option value="warning" {% if current_level=='warning' %}selected{% endif %}>⚠️ Warning</option>
+                    <option value="error" {% if current_level=='error' %}selected{% endif %}>❌ Error</option>
+                    <option value="critical" {% if current_level=='critical' %}selected{% endif %}>🔴 Critical</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary btn-sm w-100">
+                    <i class="bi bi-funnel-fill"></i> Применить
+                </button>
+            </div>
+            <div class="col-md-2">
+                <a href="{{ url_for('admin_logs') }}" class="btn btn-outline-secondary btn-sm w-100">
+                    <i class="bi bi-x-circle"></i> Сбросить
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Таблица логов -->
+<div class="card shadow">
+    <div class="card-body p-0">
+        {% if notifications.items %}
+        <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0 align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width:40px;">#</th>
+                        <th style="width:100px;">Уровень</th>
+                        <th style="width:110px;">Категория</th>
+                        <th>Заголовок</th>
+                        <th>Сообщение</th>
+                        <th style="width:90px;">Кто</th>
+                        <th style="width:120px;">Время</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for notif in notifications.items %}
+                    {% set level_cfg = {
+                    'info': ('bg-info text-white', 'bi-info-circle-fill', '#e8f4fd'),
+                    'success': ('bg-success text-white', 'bi-check-circle-fill', '#eafaf1'),
+                    'warning': ('bg-warning text-dark', 'bi-exclamation-triangle-fill', '#fef9e7'),
+                    'error': ('bg-danger text-white', 'bi-x-circle-fill', '#fdedee'),
+                    'critical': ('bg-dark text-white', 'bi-fire', '#fde8e8'),
+                    } %}
+                    {% set cat_cfg = {
+                    'order': ('🛒', 'primary'),
+                    'inventory': ('📦', 'warning'),
+                    'backup': ('💾', 'danger'),
+                    'auth': ('🔑', 'info'),
+                    'product': ('🍹', 'success'),
+                    'system': ('⚙️', 'secondary'),
+                    } %}
+                    {% set lc = level_cfg.get(notif.level, level_cfg['info']) %}
+                    {% set cc = cat_cfg.get(notif.category, ('❓', 'secondary')) %}
+                    <tr style="background: {{ lc[2] }}; {% if notif.is_read %}opacity:0.8{% endif %}">
+                        <td class="text-muted ps-3" style="font-size:0.75rem;">{{ notif.notification_id }}</td>
+                        <td>
+                            <span class="badge {{ lc[0] }}" style="font-size:0.7rem;">
+                                <i class="bi {{ lc[1] }} me-1"></i>{{ notif.level | upper }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ cc[1] }} bg-opacity-25 text-{{ cc[1] }}"
+                                style="font-size:0.72rem; border:1px solid;">
+                                {{ cc[0] }} {{ notif.category }}
+                            </span>
+                        </td>
+                        <td>
+                            <strong style="font-size:0.85rem;">{{ notif.title }}</strong>
+                            {% if not notif.is_read %}
+                            <span class="badge bg-danger ms-1" style="font-size:0.6rem;">НОВОЕ</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-muted" style="font-size:0.82rem; max-width:300px;">
+                            <span title="{{ notif.message }}"
+                                style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                {{ notif.message }}
+                            </span>
+                        </td>
+                        <td class="text-muted" style="font-size:0.78rem;">
+                            <i class="bi bi-person-circle"></i> {{ notif.created_by }}
+                        </td>
+                        <td class="text-muted" style="font-size:0.75rem; white-space:nowrap;">
+                            {{ notif.created_at.strftime('%d.%m.%Y') }}<br>
+                            <strong>{{ notif.created_at.strftime('%H:%M:%S') }}</strong>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Пагинация -->
+        {% if notifications.pages > 1 %}
+        <div class="d-flex justify-content-between align-items-center px-3 py-2 border-top bg-light">
+            <small class="text-muted">
+                Показано {{ ((notifications.page - 1) * 30) + 1 }}–{{ [notifications.page * 30, notifications.total]|min
+                }}
+                из {{ notifications.total }} записей
+            </small>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    {% if notifications.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link"
+                            href="{{ url_for('admin_logs', page=notifications.prev_num, category=current_category, level=current_level, search=search) }}">
+                            ‹ Назад
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% for p in notifications.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                    {% if p %}
+                    <li class="page-item {% if p == notifications.page %}active{% endif %}">
+                        <a class="page-link"
+                            href="{{ url_for('admin_logs', page=p, category=current_category, level=current_level, search=search) }}">{{
+                            p }}</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                    {% endif %}
+                    {% endfor %}
+                    {% if notifications.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                            href="{{ url_for('admin_logs', page=notifications.next_num, category=current_category, level=current_level, search=search) }}">
+                            Вперёд ›
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="text-center p-5 text-muted">
+            <i class="bi bi-journal-x fs-1 d-block mb-3 opacity-50"></i>
+            <h5>Логов не найдено</h5>
+            <p class="mb-0">Попробуйте изменить фильтры или подождите появления событий</p>
+            {% if current_category or current_level or search %}
+            <a href="{{ url_for('admin_logs') }}" class="btn btn-outline-primary mt-3">
+                <i class="bi bi-x-circle"></i> Сбросить фильтры
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Авто-обновление страницы каждые 60 секунд
+    let autoRefresh = true;
+    let refreshTimer = setTimeout(() => { if (autoRefresh) location.reload(); }, 60000);
+
+    document.querySelector('form')?.addEventListener('submit', () => { autoRefresh = false; });
+
+    // Показать полное сообщение по клику на строку
+    document.querySelectorAll('tbody tr').forEach(row => {
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', function () {
+            const msg = this.querySelector('[title]')?.getAttribute('title');
+            const title = this.querySelector('strong')?.textContent;
+            if (msg && title) {
+                showLogDetail(title, msg);
+            }
+        });
+    });
+
+    function showLogDetail(title, message) {
+        const modal = document.createElement('div');
+        modal.innerHTML = `
+    <div class="modal fade" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">${title}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0" style="word-break:break-word;">${message}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>`;
+        document.body.appendChild(modal);
+        const bsModal = new bootstrap.Modal(modal.querySelector('.modal'));
+        bsModal.show();
+        modal.querySelector('.modal').addEventListener('hidden.bs.modal', () => modal.remove());
+    }
+</script>
+{% endblock %}

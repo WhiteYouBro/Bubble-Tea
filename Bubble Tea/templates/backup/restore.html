@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Восстановление из бэкапа{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('backup.index') }}">Менеджер бэкапов</a></li>
+            <li class="breadcrumb-item active">Восстановление БД</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <div class="alert alert-danger">
+                <h4><i class="bi bi-exclamation-triangle-fill"></i> ВЕБ-ВОССТАНОВЛЕНИЕ ОТКЛЮЧЕНО!</h4>
+                <p><strong>Почему?</strong></p>
+                <p>Восстановление базы данных разрывает все соединения, включая соединение Flask с базой данных.
+                    Это приводит к аварийному завершению приложения с ошибкой
+                    <code>OperationalError: server closed the connection unexpectedly</code></p>
+                <p class="mb-0"><strong>Используйте восстановление через командную строку (см. инструкцию ниже)</strong>
+                </p>
+            </div>
+
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4><i class="bi bi-terminal"></i> Восстановление через командную строку (ОБЯЗАТЕЛЬНО)</h4>
+                </div>
+                <div class="card-body">
+                    <h5>Доступные бэкапы:</h5>
+                    {% if backups %}
+                    <div class="list-group mb-3">
+                        {% for backup in backups %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1"><i class="bi bi-file-earmark-zip"></i> {{ backup.filename }}</h6>
+                                    <small class="text-muted">Создан: {{ backup.modified }} | Размер: {{ backup.size
+                                        }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-circle"></i>
+                        Файлов бэкапа нет.
+                        <a href="{{ url_for('backup.create_backup') }}">Сначала создайте бэкап</a>.
+                    </div>
+                    {% endif %}
+
+                    <h5>Пошаговая инструкция:</h5>
+                    <ol>
+                        <li><strong>Остановите приложение Flask</strong>
+                            <pre class="bg-dark text-white p-2 mt-2">Нажмите Ctrl+C в окне консоли Flask</pre>
+                        </li>
+                        <li><strong>Откройте новую Командную строку / PowerShell</strong></li>
+                        <li><strong>Перейдите в директорию скриптов</strong>
+                            <pre
+                                class="bg-dark text-white p-2 mt-2">cd "D:\POProject\Bubble Tea\database\backup_scripts"</pre>
+                        </li>
+                        <li><strong>Запустите скрипт восстановления</strong>
+                            <pre class="bg-dark text-white p-2 mt-2">.\restore_from_dump.bat</pre>
+                        </li>
+                        <li><strong>Следуйте инструкциям на экране</strong>
+                            <ul class="mt-2">
+                                <li>Выберите файл бэкапа из списка</li>
+                                <li>Или введите «latest» для последнего бэкапа</li>
+                                <li>Подтвердите ввод «yes»</li>
+                            </ul>
+                        </li>
+                        <li><strong>Дождитесь завершения восстановления</strong> (может занять 5-10 минут)</li>
+                        <li><strong>Перезапустите приложение Flask</strong>
+                            <pre class="bg-dark text-white p-2 mt-2">cd "D:\POProject\Bubble Tea"
+python app.py</pre>
+                        </li>
+                    </ol>
+
+                    <div class="alert alert-info mt-3">
+                        <h6><i class="bi bi-info-circle"></i> Что делает скрипт:</h6>
+                        <ul class="mb-0">
+                            <li>✅ Показывает список доступных бэкапов</li>
+                            <li>✅ Завершает все активные соединения с БД</li>
+                            <li>✅ Удаляет существующую базу данных</li>
+                            <li>✅ Создаёт новую пустую базу данных</li>
+                            <li>✅ Восстанавливает данные из бэкапа</li>
+                            <li>✅ Проверяет успешность восстановления</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('backup.index') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> К панели бэкапов
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Access Scripts -->
+            <div class="card mt-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5><i class="bi bi-tools"></i> Вспомогательные скрипты</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Закрыть соединения с БД (при необходимости):</h6>
+                    <pre class="bg-dark text-white p-2">cd "D:\POProject\Bubble Tea\database\backup_scripts"
+.\close_connections.bat</pre>
+
+                    <h6 class="mt-3">Ручное восстановление (для продвинутых пользователей):</h6>
+                    <pre class="bg-dark text-white p-2"># Завершить соединения
+psql -U postgres -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'bibabobabebe';"
+
+# Удалить и пересоздать
+psql -U postgres -c "DROP DATABASE bibabobabebe;"
+psql -U postgres -c "CREATE DATABASE bibabobabebe;"
+
+# Восстановить
+pg_restore -U postgres -d bibabobabebe "путь\к\бэкапу.backup"</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Web restore disabled - no scripts needed -->
+{% endblock %}

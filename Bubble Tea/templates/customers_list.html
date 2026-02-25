@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Клиенты - Bubble Tea "BibaBobaBebe"{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="bi bi-people-fill"></i> Наши клиенты
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-people-fill"></i> Программа лояльности
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if customers %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>№</th>
+                                <th>Имя</th>
+                                <th>Телефон</th>
+                                <th>Email</th>
+                                <th>Баллы лояльности</th>
+                                <th>Дата регистрации</th>
+                                <th>Заказы</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for customer in customers %}
+                            <tr>
+                                <td><strong>#{{ customer.customer_id }}</strong></td>
+                                <td>
+                                    <i class="bi bi-person-circle"></i> {{ customer.full_name }}
+                                    {% if customer.loyalty_points >= 100 %}
+                                    <br><span class="badge bg-warning text-dark"><i class="bi bi-star-fill"></i>
+                                        VIP-клиент</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ customer.phone }}</td>
+                                <td>{{ customer.email or '-' }}</td>
+                                <td>
+                                    {% if customer.loyalty_points >= 100 %}
+                                    <span class="badge bg-warning text-dark">{{ customer.loyalty_points }} баллов</span>
+                                    {% elif customer.loyalty_points >= 50 %}
+                                    <span class="badge bg-info">{{ customer.loyalty_points }} баллов</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ customer.loyalty_points }} баллов</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ customer.registration_date.strftime('%d.%m.%Y') }}</td>
+                                <td>
+                                    <span class="badge bg-primary">{{ customer.orders | length }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Customer Statistics -->
+                <div class="row mt-4">
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h3 class="text-primary">{{ customers | length }}</h3>
+                                <p class="mb-0">Всего клиентов</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h3 class="text-warning">{{ customers | selectattr('loyalty_points', 'ge', 100) | list |
+                                    length }}</h3>
+                                <p class="mb-0">VIP-клиенты</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h3 class="text-success">{{ customers | sum(attribute='loyalty_points') }}</h3>
+                                <p class="mb-0">Всего баллов</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loyalty Program Info -->
+                <div class="card mt-4 bg-light">
+                    <div class="card-body">
+                        <h5><i class="bi bi-star"></i> О программе лояльности</h5>
+                        <ul>
+                            <li>Каждый заказ — <strong>10 баллов</strong></li>
+                            <li><strong>50+ баллов</strong> — скидка 5%</li>
+                            <li><strong>100+ баллов</strong> — статус VIP-клиента и скидка 10%</li>
+                        </ul>
+                    </div>
+                </div>
+
+                {% else %}
+                <div class="alert alert-info text-center" role="alert">
+                    <i class="bi bi-info-circle"></i> Клиентов не найдено
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

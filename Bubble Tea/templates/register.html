@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Регистрация — BibaBobaBebe{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login-enhanced.css') }}">
+
+<div class="py-4" style="max-width:500px; margin:0 auto;">
+
+    <!-- Brand mark -->
+    <div class="text-center mb-4">
+        <i class="bi bi-cup-hot-fill" style="font-size:2rem; color:var(--caramel);"></i>
+        <div style="font-size:0.72rem; text-transform:uppercase; letter-spacing:0.12em; color:#aaa; margin-top:0.3rem;">
+            BibaBobaBebe
+        </div>
+    </div>
+
+    <div class="card register-card">
+        <div class="card-header">
+            <h3>Создать аккаунт</h3>
+        </div>
+
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('register') }}">
+
+                <div class="mb-3">
+                    <label for="username" class="form-label">Имя пользователя</label>
+                    <input type="text" class="form-control" id="username" name="username" placeholder="придумайте_логин"
+                        required autofocus autocomplete="username">
+                    <div class="form-text" style="font-size:0.75rem; color:#aaa;">Должно быть уникальным.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" placeholder="you@example.com"
+                        required autocomplete="email">
+                </div>
+
+                <div class="mb-3">
+                    <label for="full_name" class="form-label">Полное имя <span
+                            style="color:#bbb; font-weight:400; text-transform:none; letter-spacing:0;">(необязательно)</span></label>
+                    <input type="text" class="form-control" id="full_name" name="full_name" placeholder="Ваше имя"
+                        autocomplete="name">
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-sm-6">
+                        <label for="password" class="form-label">Пароль</label>
+                        <input type="password" class="form-control" id="password" name="password"
+                            placeholder="мин. 8 символов" required minlength="8" autocomplete="new-password">
+                    </div>
+                    <div class="col-sm-6">
+                        <label for="confirm_password" class="form-label">Подтверждение</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password"
+                            placeholder="повторите пароль" required minlength="8" autocomplete="new-password">
+                    </div>
+                </div>
+
+                <div class="d-grid mt-4">
+                    <button type="submit" class="btn btn-primary">Создать аккаунт</button>
+                </div>
+
+            </form>
+        </div>
+
+        <div class="card-footer">
+            Уже есть аккаунт? <a href="{{ url_for('login') }}">Войти →</a>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block title %}BibaBobaBebe — Bubble Tea{% endblock %}
+
+{% block content %}
+
+<!-- ── Hero ───────────────────────────────────────────────────── -->
+<div class="rounded-0" style="
+    background: var(--espresso);
+    color: #fff;
+    padding: 5rem 2.5rem 4rem;
+    margin: -1.5rem -12px 2.5rem;
+    border-radius: 4px !important;
+">
+    <div class="row align-items-center">
+        <div class="col-lg-7">
+            <p class="mb-2"
+                style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.14em; color:var(--caramel); font-weight:600;">
+                Bubble Tea · Алматы
+            </p>
+            <h1 class="mb-3"
+                style="font-size:clamp(2rem,5vw,3.2rem); font-weight:700; color:#fff; letter-spacing:-0.03em; line-height:1.1;">
+                BibaBobaBebe
+            </h1>
+            <p class="mb-4" style="font-size:1.05rem; color:rgba(255,255,255,0.60); max-width:480px; line-height:1.65;">
+                Бабл ти из свежих ингредиентов.<br>
+                Широкий выбор вкусов и топпингов.
+            </p>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ url_for('menu') }}" class="btn btn-light"
+                    style="font-weight:600; border-radius:2px; font-size:0.875rem;">
+                    Смотреть меню
+                </a>
+                <a href="{{ url_for('new_order') }}" class="btn"
+                    style="border-radius:2px; font-size:0.875rem; background:transparent; border:1px solid rgba(255,255,255,0.25); color:rgba(255,255,255,0.75);">
+                    Сделать заказ
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-5 d-none d-lg-flex justify-content-end">
+            <i class="bi bi-cup-hot-fill" style="font-size:8rem; color:var(--caramel); opacity:0.35;"></i>
+        </div>
+    </div>
+</div>
+
+<!-- ── Categories ─────────────────────────────────────────────── -->
+{% if categories %}
+<section class="mb-5">
+    <div class="d-flex justify-content-between align-items-baseline mb-3">
+        <h2 style="font-size:1.15rem; font-weight:600; letter-spacing:-0.01em;">Категории</h2>
+        <a href="{{ url_for('menu') }}" style="font-size:0.82rem; color:var(--latte);">Все продукты →</a>
+    </div>
+    <div class="row g-3">
+        {% for category in categories %}
+        <div class="col-md-4 col-sm-6">
+            <a href="{{ url_for('menu', category=category.category_id) }}" class="text-decoration-none">
+                <div class="card hover-card h-100 p-0" style="border-radius:4px;">
+                    <div class="card-body d-flex align-items-center gap-3" style="padding:1.1rem;">
+                        <div
+                            style="width:40px; height:40px; background:var(--steam); border-radius:2px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                            {% if 'Bubble' in category.category_name or 'бабл' in category.category_name|lower %}
+                            <i class="bi bi-cup-straw" style="color:var(--caramel); font-size:1.1rem;"></i>
+                            {% elif 'Кофе' in category.category_name or 'кофе' in category.category_name|lower %}
+                            <i class="bi bi-cup-hot" style="color:var(--caramel); font-size:1.1rem;"></i>
+                            {% elif 'Смузи' in category.category_name or 'смузи' in category.category_name|lower %}
+                            <i class="bi bi-droplet-half" style="color:var(--caramel); font-size:1.1rem;"></i>
+                            {% elif 'Десерт' in category.category_name or 'десерт' in category.category_name|lower %}
+                            <i class="bi bi-cake2" style="color:var(--caramel); font-size:1.1rem;"></i>
+                            {% else %}
+                            <i class="bi bi-bag" style="color:var(--caramel); font-size:1.1rem;"></i>
+                            {% endif %}
+                        </div>
+                        <div class="overflow-hidden">
+                            <div style="font-weight:600; font-size:0.9rem; color:var(--espresso);">{{
+                                category.category_name }}</div>
+                            {% if category.description %}
+                            <div class="text-muted text-truncate" style="font-size:0.78rem;">{{ category.description }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <i class="bi bi-arrow-right ms-auto text-muted flex-shrink-0" style="font-size:0.85rem;"></i>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- ── Popular Products ────────────────────────────────────────── -->
+{% if products %}
+<section class="mb-5">
+    <div class="d-flex justify-content-between align-items-baseline mb-3">
+        <h2 style="font-size:1.15rem; font-weight:600; letter-spacing:-0.01em;">Популярные напитки</h2>
+        <a href="{{ url_for('menu') }}" style="font-size:0.82rem; color:var(--latte);">Смотреть все →</a>
+    </div>
+    <div class="row g-3">
+        {% for product in products %}
+        <div class="col-md-4 col-sm-6">
+            <div class="card hover-card h-100">
+                <!-- image placeholder -->
+                {% if product.image_url %}
+                <img src="{{ product.image_url }}" class="card-img-top" alt="{{ product.product_name }}"
+                    style="height:160px; object-fit:cover; border-radius:3px 3px 0 0;">
+                {% else %}
+                <div
+                    style="height:140px; background:var(--steam); display:flex; align-items:center; justify-content:center; border-radius:3px 3px 0 0;">
+                    <i class="bi bi-cup-straw" style="font-size:3rem; color:var(--caramel); opacity:0.6;"></i>
+                </div>
+                {% endif %}
+
+                <div class="card-body" style="padding:0.9rem;">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <h6 class="mb-0" style="font-weight:600; font-size:0.9rem; color:var(--espresso);">{{
+                            product.product_name }}</h6>
+                        <span class="badge bg-light ms-2 flex-shrink-0"
+                            style="color:var(--espresso) !important; font-size:0.65rem;">
+                            {{ product.category.category_name }}
+                        </span>
+                    </div>
+                    {% if product.description %}
+                    <p class="text-muted mb-2" style="font-size:0.8rem; line-height:1.45;">
+                        {{ product.description[:70] }}{% if product.description|length > 70 %}…{% endif %}
+                    </p>
+                    {% endif %}
+                    <div class="d-flex justify-content-between align-items-center mt-auto pt-1">
+                        <span style="font-weight:700; font-size:1rem; color:var(--espresso);">{{ product.price |
+                            currency }}</span>
+                        <a href="{{ url_for('product_detail', product_id=product.product_id) }}"
+                            class="btn btn-sm btn-outline-primary" style="font-size:0.78rem; padding:0.25rem 0.65rem;">
+                            Подробнее
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- ── Why us ──────────────────────────────────────────────────── -->
+<section class="mb-2">
+    <div class="row g-0" style="border: 1px solid var(--smoke); border-radius:4px; overflow:hidden;">
+        <div class="col-md-3 col-sm-6">
+            <div
+                style="padding:2rem 1.5rem; border-right:1px solid var(--smoke); border-bottom:1px solid var(--smoke);">
+                <div style="font-size:1.6rem; color:var(--caramel); margin-bottom:0.5rem;">
+                    <i class="bi bi-leaf"></i>
+                </div>
+                <div style="font-weight:600; font-size:0.9rem; color:var(--espresso); margin-bottom:0.3rem;">Свежесть
+                </div>
+                <div style="font-size:0.8rem; color:#888; line-height:1.5;">Только натуральные ингредиенты</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div
+                style="padding:2rem 1.5rem; border-right:1px solid var(--smoke); border-bottom:1px solid var(--smoke);">
+                <div style="font-size:1.6rem; color:var(--caramel); margin-bottom:0.5rem;">
+                    <i class="bi bi-stopwatch"></i>
+                </div>
+                <div style="font-weight:600; font-size:0.9rem; color:var(--espresso); margin-bottom:0.3rem;">Быстро
+                </div>
+                <div style="font-size:0.8rem; color:#888; line-height:1.5;">Готово за 5–10 минут</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div
+                style="padding:2rem 1.5rem; border-right:1px solid var(--smoke); border-bottom:1px solid var(--smoke);">
+                <div style="font-size:1.6rem; color:var(--caramel); margin-bottom:0.5rem;">
+                    <i class="bi bi-stars"></i>
+                </div>
+                <div style="font-weight:600; font-size:0.9rem; color:var(--espresso); margin-bottom:0.3rem;">Качество
+                </div>
+                <div style="font-size:0.8rem; color:#888; line-height:1.5;">Готовим с заботой каждый раз</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div style="padding:2rem 1.5rem; border-bottom:1px solid var(--smoke);">
+                <div style="font-size:1.6rem; color:var(--caramel); margin-bottom:0.5rem;">
+                    <i class="bi bi-gift"></i>
+                </div>
+                <div style="font-weight:600; font-size:0.9rem; color:var(--espresso); margin-bottom:0.3rem;">Бонусы
+                </div>
+                <div style="font-size:0.8rem; color:#888; line-height:1.5;">Программа лояльности для постоянных клиентов
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Аналитика - Bubble Tea "BibaBobaBebe"{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="bi bi-graph-up"></i> Аналитика и статистика
+        </h1>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card shadow border-success">
+            <div class="card-body text-center">
+                <i class="bi bi-receipt text-success" style="font-size: 3rem;"></i>
+                <h2 class="text-success mt-3">{{ total_orders }}</h2>
+                <p class="text-muted mb-0">Завершённых заказов</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow border-primary">
+            <div class="card-body text-center">
+                <i class="bi bi-currency-dollar text-primary" style="font-size: 3rem;"></i>
+                <h2 class="text-primary mt-3">{{ total_revenue | currency }}</h2>
+                <p class="text-muted mb-0">Общая выручка</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow border-info">
+            <div class="card-body text-center">
+                <i class="bi bi-people text-info" style="font-size: 3rem;"></i>
+                <h2 class="text-info mt-3">{{ total_customers }}</h2>
+                <p class="text-muted mb-0">Зарегистрированных клиентов</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Popular Products -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-star"></i> ТОП-10 популярных продуктов
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if popular_products %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Место</th>
+                                <th>Продукт</th>
+                                <th>Раз заказано</th>
+                                <th>Продано шт.</th>
+                                <th>Выручка</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in popular_products %}
+                            <tr>
+                                <td>
+                                    {% if loop.index <= 3 %} <span class="badge bg-warning text-dark">{{ loop.index
+                                        }}</span>
+                                        {% else %}
+                                        {{ loop.index }}
+                                        {% endif %}
+                                </td>
+                                <td><strong>{{ product.product_name }}</strong></td>
+                                <td>{{ product.total_sold }}</td>
+                                <td>{{ product.total_sold }}</td>
+                                <td class="text-success"><strong>{{ product.revenue | currency }}</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info text-center">
+                    <i class="bi bi-info-circle"></i> Пока нет данных для аналитики
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recommendations -->
+{% if total_orders > 0 %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-lightbulb"></i> Рекомендации
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <i class="bi bi-calculator text-primary"></i>
+                        <strong>Средний чек:</strong> {{ (total_revenue / total_orders) | currency }}
+                    </li>
+                    {% if total_customers > 0 %}
+                    <li class="list-group-item">
+                        <i class="bi bi-star text-warning"></i>
+                        <strong>Баллы на клиента (в среднем):</strong> {{ (total_orders / total_customers * 10) |
+                        round(1) }} баллов
+                    </li>
+                    {% endif %}
+                    {% if popular_products %}
+                    <li class="list-group-item">
+                        <i class="bi bi-trophy text-success"></i>
+                        <strong>Самый популярный продукт:</strong> {{ popular_products[0].product_name }}
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% block title %}Меню — BibaBobaBebe{% endblock %}
+
+{% block content %}
+
+<!-- ── Page header ─────────────────────────────────────────────── -->
+<div class="d-flex justify-content-between align-items-baseline mb-4">
+    <div>
+        <h1 style="font-size:1.5rem; font-weight:700; letter-spacing:-0.02em; color:var(--espresso); margin:0;">
+            Меню
+        </h1>
+        <p class="text-muted mb-0" style="font-size:0.85rem; margin-top:0.2rem;">
+            {{ products | length }} позици{{ 'я' if products | length == 1 else 'й' }}
+            {% if selected_category %} в этой категории{% endif %}
+        </p>
+    </div>
+    <a href="{{ url_for('new_order') }}" class="btn btn-primary" style="font-size:0.85rem;">
+        <i class="bi bi-cart-plus me-1"></i>Новый заказ
+    </a>
+</div>
+
+<!-- ── Search ──────────────────────────────────────────────────── -->
+<div class="row mb-3">
+    <div class="col-md-8 col-lg-6">
+        <div class="input-group">
+            <span class="input-group-text" style="background:var(--steam);">
+                <i class="bi bi-search" style="font-size:0.85rem;"></i>
+            </span>
+            <input type="text" class="form-control" id="productSearch"
+                placeholder="Поиск по названию или описанию… (Ctrl+K)">
+            <button class="btn btn-outline-secondary" type="button" id="clearSearch" title="Очистить">
+                <i class="bi bi-x" style="font-size:1rem;"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Category tabs ───────────────────────────────────────────── -->
+<div class="mb-4" style="border-bottom:1px solid var(--smoke);">
+    <div class="d-flex flex-wrap gap-0" style="margin-bottom:-1px;">
+        <a href="{{ url_for('menu') }}" class="menu-tab {% if not selected_category %}active{% endif %}">
+            Все
+        </a>
+        {% for category in categories %}
+        <a href="{{ url_for('menu', category=category.category_id) }}"
+            class="menu-tab {% if selected_category == category.category_id %}active{% endif %}">
+            {{ category.category_name }}
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ── Product grid ────────────────────────────────────────────── -->
+<div class="row g-3" id="productGrid">
+    {% if products %}
+    {% for product in products %}
+    <div class="col-md-4 col-lg-3 col-sm-6 product-col">
+        <div class="card hover-card h-100" style="border-radius:4px;">
+
+            <!-- Image / placeholder -->
+            {% if product.image_url %}
+            <img src="{{ product.image_url }}" class="card-img-top" alt="{{ product.product_name }}"
+                style="height:170px; object-fit:cover; border-radius:3px 3px 0 0;">
+            {% else %}
+            <div style="height:140px; background:var(--steam); border-radius:3px 3px 0 0;
+                            display:flex; align-items:center; justify-content:center;">
+                <i class="bi bi-cup-straw" style="font-size:3rem; color:var(--caramel); opacity:0.5;"></i>
+            </div>
+            {% endif %}
+
+            <!-- Status strip -->
+            <div style="height:3px; background:{% if product.is_available %}#2D6A4F{% else %}#ccc{% endif %};"></div>
+
+            <div class="card-body" style="padding:0.9rem 1rem;">
+                <div class="d-flex align-items-start justify-content-between gap-1 mb-1">
+                    <h6 class="product-name mb-0"
+                        style="font-weight:600; font-size:0.9rem; color:var(--espresso); line-height:1.3;">
+                        {{ product.product_name }}
+                    </h6>
+                    {% if not product.is_available %}
+                    <span class="badge bg-light flex-shrink-0"
+                        style="color:#999 !important; font-size:0.6rem; white-space:nowrap;">
+                        Недоступен
+                    </span>
+                    {% endif %}
+                </div>
+
+                <p class="product-desc text-muted mb-2" style="font-size:0.78rem; line-height:1.45; min-height:2.6rem;">
+                    {% if product.description %}
+                    {{ product.description[:80] }}{% if product.description|length > 80 %}…{% endif %}
+                    {% endif %}
+                </p>
+
+                <div class="d-flex flex-wrap gap-1 mb-2">
+                    <span class="badge bg-light product-category"
+                        style="color:var(--espresso) !important; font-size:0.65rem;">
+                        {{ product.category.category_name }}
+                    </span>
+                    {% if product.preparation_time %}
+                    <span class="badge bg-light" style="color:#888 !important; font-size:0.65rem;">
+                        <i class="bi bi-clock me-1"></i>{{ product.preparation_time }} мин
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card-footer d-flex justify-content-between align-items-center" style="padding:0.65rem 1rem;">
+                <span style="font-weight:700; font-size:1rem; color:var(--espresso);">
+                    {{ product.price | currency }}
+                </span>
+                <a href="{{ url_for('product_detail', product_id=product.product_id) }}"
+                    class="btn btn-sm btn-outline-primary" style="font-size:0.78rem; padding:0.25rem 0.7rem;">
+                    Подробнее
+                </a>
+            </div>
+
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="col-12">
+        <div class="text-center py-5" style="color:#bbb;">
+            <i class="bi bi-cup-straw d-block mb-3" style="font-size:3rem;"></i>
+            <p style="font-size:0.95rem;">Нет продуктов в этой категории</p>
+            <a href="{{ url_for('menu') }}" class="btn btn-outline-primary btn-sm">Показать все</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- No search results placeholder -->
+<div id="noSearchResults" class="text-center py-5" style="display:none; color:#bbb;">
+    <i class="bi bi-search d-block mb-3" style="font-size:2.5rem;"></i>
+    <p style="font-size:0.95rem;">Ничего не найдено по запросу "<span id="searchQuery"></span>"</p>
+</div>
+
+<!-- ── CTA ─────────────────────────────────────────────────────── -->
+<div class="mt-5 p-4 text-center" style="background:var(--espresso); border-radius:4px;">
+    <h4 style="color:#fff; font-weight:600; margin-bottom:0.5rem;">Готовы заказать?</h4>
+    <p style="color:rgba(255,255,255,0.55); font-size:0.9rem; margin-bottom:1.25rem;">
+        Выберите любимые напитки и оформите заказ.
+    </p>
+    <a href="{{ url_for('new_order') }}" class="btn btn-light" style="font-weight:600; border-radius:2px;">
+        <i class="bi bi-cart-plus me-2"></i>Новый заказ
+    </a>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<style>
+    .menu-tab {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #888;
+        text-decoration: none;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
+        transition: color 0.12s ease, border-color 0.12s ease;
+        white-space: nowrap;
+    }
+
+    .menu-tab:hover {
+        color: var(--espresso);
+        text-decoration: none;
+    }
+
+    .menu-tab.active {
+        color: var(--espresso);
+        border-bottom-color: var(--coffee);
+        font-weight: 600;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('productSearch');
+        const clearBtn = document.getElementById('clearSearch');
+        const noResults = document.getElementById('noSearchResults');
+        const querySpan = document.getElementById('searchQuery');
+        const productCols = document.querySelectorAll('.product-col');
+
+        function doSearch() {
+            const q = searchInput.value.toLowerCase().trim();
+            let visible = 0;
+
+            productCols.forEach(col => {
+                const name = col.querySelector('.product-name')?.textContent.toLowerCase() || '';
+                const desc = col.querySelector('.product-desc')?.textContent.toLowerCase() || '';
+                const cat = col.querySelector('.product-category')?.textContent.toLowerCase() || '';
+                const match = !q || name.includes(q) || desc.includes(q) || cat.includes(q);
+                col.style.display = match ? '' : 'none';
+                if (match) visible++;
+            });
+
+            if (noResults) {
+                noResults.style.display = (visible === 0 && q) ? '' : 'none';
+                if (querySpan) querySpan.textContent = q;
+            }
+        }
+
+        searchInput.addEventListener('input', doSearch);
+        searchInput.addEventListener('keyup', e => { if (e.key === 'Escape') { searchInput.value = ''; doSearch(); } });
+        clearBtn.addEventListener('click', () => { searchInput.value = ''; doSearch(); searchInput.focus(); });
+
+        document.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); searchInput.focus(); }
+        });
+    });
+</script>
+{% endblock %}

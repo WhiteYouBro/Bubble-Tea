@@ -1,0 +1,4 @@
+[SUCCESS] Physical backup created: 20251102_202021
+Location: D:\POProject\Bubble Tea\database\backup_scripts\..\..\backups\physical\20251102_202021
+Type: Physical (pg_basebackup
+Format: TAR compressed 

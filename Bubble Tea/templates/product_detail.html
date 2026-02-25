@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.product_name }} - Bubble Tea "BibaBobaBebe"{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Главная</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('menu') }}">Меню</a></li>
+                <li class="breadcrumb-item active">{{ product.product_name }}</li>
+            </ol>
+        </nav>
+
+        <div class="card shadow">
+            <div class="row g-0">
+                <div class="col-md-5">
+                    {% if product.image_url %}
+                    <img src="{{ product.image_url }}" class="img-fluid rounded-start" alt="{{ product.product_name }}"
+                        style="object-fit:cover; height:100%; min-height:300px;">
+                    {% else %}
+                    <div class="d-flex align-items-center justify-content-center h-100"
+                        style="background:var(--steam); min-height:300px; border-radius:4px 0 0 4px;">
+                        <i class="bi bi-cup-straw" style="font-size:5rem; color:var(--caramel); opacity:0.4;"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-7">
+                    <div class="card-body" style="padding:2rem;">
+                        <h2 style="color:var(--espresso); font-weight:700;">{{ product.product_name }}</h2>
+                        <span class="badge bg-info mb-3">{{ product.category.category_name }}</span>
+
+                        {% if product.description %}
+                        <p class="text-muted" style="line-height:1.7;">{{ product.description }}</p>
+                        {% endif %}
+
+                        {% if product.preparation_time %}
+                        <p>
+                            <i class="bi bi-clock text-muted"></i>
+                            <strong>Время приготовления:</strong> {{ product.preparation_time }} мин
+                        </p>
+                        {% endif %}
+
+                        <p>
+                            <strong>Наличие:</strong>
+                            {% if product.is_available %}
+                            <span class="badge bg-success">В наличии</span>
+                            {% else %}
+                            <span class="badge bg-danger">Нет в наличии</span>
+                            {% endif %}
+                        </p>
+
+                        <h3 class="text-primary mt-4">{{ product.price | currency }}</h3>
+
+                        <div class="mt-4 d-flex gap-2">
+                            {% if product.is_available %}
+                            <a href="{{ url_for('new_order', product_id=product.product_id) }}" class="btn btn-primary">
+                                <i class="bi bi-cart-plus"></i> Добавить в заказ
+                            </a>
+                            {% endif %}
+                            <a href="{{ url_for('menu') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Назад к меню
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

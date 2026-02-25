@@ -1,0 +1,11 @@
+# Зависимости для веб-приложения Bubble Tea "BibaBobaBebe"
+Flask>=3.0.0
+Flask-SQLAlchemy>=3.1.1
+Flask-Login>=0.6.3
+psycopg2-binary>=2.9.5
+python-dotenv>=1.0.0
+Werkzeug>=3.0.1
+prometheus-flask-exporter>=0.23.2
+prometheus-client>=0.21.1
+requests>=2.31.0
+

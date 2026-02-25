@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Заказ #{{ order.order_id }} - Bubble Tea "BibaBobaBebe"{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Главная</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('orders_list') }}">Заказы</a></li>
+                <li class="breadcrumb-item active">Заказ #{{ order.order_id }}</li>
+            </ol>
+        </nav>
+
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0">
+                        <i class="bi bi-receipt text-white"></i> Заказ #{{ order.order_id }}
+                    </h2>
+                    <span
+                        class="badge bg-{% if order.status == 'completed' %}success{% elif order.status == 'cancelled' %}danger{% elif order.status == 'ready' %}info{% else %}warning{% endif %} fs-6">
+                        {{ order.status | status_text }}
+                    </span>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Order Information -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5><i class="bi bi-info-circle"></i> Информация</h5>
+                        <hr>
+                        <p><strong>Дата и время:</strong> {{ order.order_date.strftime('%d.%m.%Y %H:%M') }}</p>
+                        <p><strong>Статус:</strong>
+                            <span
+                                class="badge bg-{% if order.status == 'completed' %}success{% elif order.status == 'cancelled' %}danger{% elif order.status == 'ready' %}info{% else %}warning{% endif %}">
+                                {{ order.status | status_text }}
+                            </span>
+                        </p>
+                        <p><strong>Способ оплаты:</strong>
+                            {% if order.payment_method == 'cash' %}Наличные
+                            {% elif order.payment_method == 'card' %}Карта
+                            {% else %}Онлайн{% endif %}
+                        </p>
+                        {% if order.notes %}
+                        <p><strong>Примечания:</strong> {{ order.notes }}</p>
+                        {% endif %}
+                        {% if order.user_id %}
+                        <p><strong>Аккаунт:</strong>
+                            {% if current_user.role == 'admin' %}
+                            <a href="{{ url_for('admin_view_user', user_id=order.user_id) }}"
+                                class="btn btn-sm btn-outline-info">
+                                <i class="bi bi-person-circle"></i> Профиль
+                            </a>
+                            {% else %}
+                            <span class="badge bg-info">Зарегистрированный пользователь</span>
+                            {% endif %}
+                        </p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <h5><i class="bi bi-people"></i> Участники</h5>
+                        <hr>
+                        <p><strong>Клиент:</strong>
+                            {% if order.customer %}
+                            {% if current_user.role == 'admin' %}
+                            <a href="{{ url_for('customers_list') }}">{{ order.customer.full_name }}</a>
+                            {% else %}
+                            {{ order.customer.full_name }}
+                            {% endif %}
+                            <br><small class="text-muted">{{ order.customer.phone }}</small>
+                            {% else %}
+                            <span class="text-muted">Гость</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Сотрудник:</strong>
+                            {{ order.employee.full_name }}
+                            <br><small class="text-muted">{{ order.employee.position.position_name }}</small>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Order Items -->
+                <h5><i class="bi bi-list-ul"></i> Позиции заказа</h5>
+                <hr>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Продукт</th>
+                                <th>Категория</th>
+                                <th>Цена</th>
+                                <th>Кол-во</th>
+                                <th>Сумма</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.order_items %}
+                            <tr>
+                                <td>
+                                    <strong>{{ item.product.product_name }}</strong>
+                                    {% if item.customization %}
+                                    <br><small class="text-muted"><i class="bi bi-pencil"></i> {{ item.customization
+                                        }}</small>
+                                    {% endif %}
+                                </td>
+                                <td><span class="badge bg-info">{{ item.product.category.category_name }}</span></td>
+                                <td>{{ item.unit_price | currency }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td><strong>{{ item.subtotal | currency }}</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <th colspan="4" class="text-end">ИТОГО:</th>
+                                <th class="text-primary fs-5">{{ order.total_amount | currency }}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- Order Management (Admin Only) -->
+                {% if current_user.is_authenticated and current_user.role == 'admin' %}
+                <div class="mt-4">
+                    <h5><i class="bi bi-gear"></i> Управление заказом</h5>
+                    <hr>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-warning" onclick="updateStatus('pending')">
+                            Ожидание
+                        </button>
+                        <button type="button" class="btn btn-outline-info" onclick="updateStatus('preparing')">
+                            Готовится
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" onclick="updateStatus('ready')">
+                            Готов
+                        </button>
+                        <button type="button" class="btn btn-outline-success" onclick="updateStatus('completed')">
+                            Завершён
+                        </button>
+                        <button type="button" class="btn btn-outline-danger" onclick="updateStatus('cancelled')">
+                            Отменён
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-transparent">
+                {% if current_user.is_authenticated and current_user.role == 'admin' %}
+                <a href="{{ url_for('orders_list') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> К списку заказов
+                </a>
+                {% else %}
+                <a href="{{ url_for('profile_orders') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> К моим заказам
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function updateStatus(newStatus) {
+        if (!confirm('Изменить статус заказа на «' + newStatus + '»?')) {
+            return;
+        }
+
+        fetch('/api/order/{{ order.order_id }}/status', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ status: newStatus })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Ошибка: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('Ошибка обновления статуса');
+                console.error('Error:', error);
+            });
+    }
+</script>
+{% endblock %}
