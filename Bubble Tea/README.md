@@ -270,12 +270,6 @@ docker-compose down -v
 
 ---
 
-## 📜 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
 ## 🏆 Project Status
 
 ✅ **Fully functional and tested**
@@ -289,8 +283,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ Order management
 
 ---
-
-**Version:** 2.0.0  
-**Last Updated:** November 2, 2025  
-
 **📘 [READ COMPLETE GUIDE](COMPLETE_PROJECT_GUIDE.md) for full documentation!**
